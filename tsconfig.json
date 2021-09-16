@@ -1,0 +1,12 @@
+{
+  "include": ["src", "lib"],
+  "compilerOptions": {
+      "target": "ES2016",
+      "lib": ["ES2016", "DOM"],
+      "typeRoots": ["./types"],
+      "outDir": "./dist",
+      "declaration": true,
+      "strict": true
+  },
+  "exclude": ["node_modules", "/types", "/dist", "/build"]
+}
