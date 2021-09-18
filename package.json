@@ -18,6 +18,10 @@
   ],
   "author": "Johan Sebring",
   "license": "ISC",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/sebring/freerunner.git"
+  },
   "scripts": {
     "build": "tsc",
     "doc": "typedoc --out docs src/freerunner.ts"
