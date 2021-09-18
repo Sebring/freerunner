@@ -2,8 +2,8 @@
   "name": "freerunner",
   "version": "0.0.1",
   "description": "Freerunner, a typed event driven entity compent system based game engine.",
-  "main": "dist/freerunner.js",
-  "types": "dist/freerunner.d.ts",
+  "main": "build/freerunner.js",
+  "types": "build/freerunner.d.ts",
   "keywords": [
     "game",
     "engine",
@@ -19,10 +19,12 @@
   "author": "Johan Sebring",
   "license": "ISC",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "doc": "typedoc --out docs src/freerunner.ts"
   },
   "dependencies": {},
   "devDependencies": {
+    "typedoc": "^0.22.3",
     "typescript": "^4.4.2"
   }
 }

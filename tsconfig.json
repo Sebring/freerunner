@@ -4,7 +4,7 @@
       "target": "ES2016",
       "lib": ["ES2016", "DOM"],
       "typeRoots": ["./types"],
-      "outDir": "./dist",
+      "outDir": "./build",
       "declaration": true,
       "strict": true
   },
