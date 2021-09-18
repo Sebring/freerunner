@@ -12,4 +12,4 @@ install
 npm i freerunner
 ```
 
-See [Platformer demo](https://github.com/Sebring/freerunner/wiki/Quickstart-using-Parcel) for game implementation details. And did I mention it's based on [Crafty](http://craftyjs.com/getting-started/)
+See [Platformer demo](https://github.com/Sebring/freerunner/wiki/Quickstart-using-Parcel) for game implementation details. And did I mention it's based on [Crafty](http://craftyjs.com/getting-started/)?
