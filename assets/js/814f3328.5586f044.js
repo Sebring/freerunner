@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[535],{5641:function(e){e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Freerunner 0.0.1","permalink":"/freerunner/blog/frerunner-0-0-1"}]}')}}]);

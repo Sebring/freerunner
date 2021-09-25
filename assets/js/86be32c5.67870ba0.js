@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[464],{6787:function(s){s.exports=JSON.parse('{"/freerunner/blog/tags/docusaurus":{"allTagsPath":"/freerunner/blog/tags","slug":"/freerunner/blog/tags/docusaurus","name":"docusaurus","count":1,"permalink":"/freerunner/blog/tags/docusaurus"}}')}}]);

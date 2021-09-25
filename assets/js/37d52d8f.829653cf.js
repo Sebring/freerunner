@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[305],{8621:function(e){e.exports=JSON.parse('{"allTagsPath":"/freerunner/blog/tags","slug":"/freerunner/blog/tags/hello","name":"hello","count":2,"permalink":"/freerunner/blog/tags/hello"}')}}]);
