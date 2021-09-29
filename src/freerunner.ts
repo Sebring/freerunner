@@ -104,7 +104,7 @@ export interface Component {
 }
 
 export interface AnyComponent extends Component {
-key: any
+    key?: any
 }
 
 export interface System {
@@ -157,7 +157,7 @@ export interface E_2D extends Entity {
 }
 
 export interface AnyEntity extends Entity {
-    key: any
+    key?: any
 }
 
 export interface E_Motion extends E_2D {
