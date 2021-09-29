@@ -1,7 +1,7 @@
 // @ts-ignore
 import C from '../lib/crafty/crafty.js'
 
-const Freerunner = (function(width?: number, height?: number, element?: HTMLElement) : FGame {
+const Freerunner = (function(width?: number, height?: number, element?: HTMLElement|null) : FGame {
     console.log('init Freerunner')
     C.plugin = []
     C.loadPlugin = function(plugin: FPlugin) {
@@ -38,7 +38,7 @@ export declare interface FGame {
     cc<T extends CComponent>(component: CComponent) : T
     e<T extends Entity>(components: string): T
     fps: number
-    init(width?:number, height?:number): this
+    init(width?:number, height?:number, element?:HTMLElement|null): this
     
     keys: any
     
@@ -88,18 +88,28 @@ export declare interface FGame {
      * @param event name of event
      * @param data data to pass 
      */
+    trigger(event: string, data: any): void
     rectManager: any
-    UID() : any
+    UID(): any
     math: Math
     viewport: Viewport
-    loadPlugin(plugin: FPlugin) : FPlugin
+    loadPlugin(plugin: FPlugin): FPlugin
 }
 
 export interface Component {
-    init?() : this
+    init?(): void
     required?: string
     properties?: any
-    events?: any
+    events?: object
+}
+
+export interface AnyComponent extends Component {
+key: any
+}
+
+export interface System {
+    init?(): void
+    events?: object
 }
 
 /**
@@ -121,21 +131,22 @@ export interface CComponent extends Component {
 
 export interface FPlugin {
     name: string
-    load(C: FGame, options?: any) : void
+    load(C: FGame, options?: any): void
 }
 
 export interface Viewport {
     width: number
     height: number
-    reload() : void
-    init() : void
-    reset() : void
+    reload(): void
+    init(): void
+    reset(): void
 }
 
 
 export interface Entity {
-    attr(attributes: any) : this
-    addComponent(componentName: string) : this
+    attr(attributes: any): this
+    addComponent(componentName: string): this
+    bind(event: string, fn: any): this
 }
 
 export interface E_2D extends Entity {
@@ -143,6 +154,10 @@ export interface E_2D extends Entity {
     y: number
     h: number
     w: number
+}
+
+export interface AnyEntity extends Entity {
+    key: any
 }
 
 export interface E_Motion extends E_2D {
