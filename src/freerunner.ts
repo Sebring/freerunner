@@ -43,8 +43,6 @@ export declare interface FGame {
     fps: number
     init(width?:number, height?:number, element?:HTMLElement|null): this
     
-    keys: any
-    
     /**
      * Set background color to html color name.
      */
@@ -104,15 +102,13 @@ export interface Component {
     required?: string
     properties?: any
     events?: object
-}
-
-export interface AnyComponent extends Component {
-    key?: any
+    [keys:string]: any
 }
 
 export interface System {
     init?(): void
     events?: object
+    [keys:string]: any
 }
 
 /**
@@ -150,6 +146,7 @@ export interface Entity {
     attr(attributes: any): this
     addComponent(componentName: string): this
     bind(event: string, fn: any): this
+    [keys:string]: any
 }
 
 export interface E_2D extends Entity {
@@ -157,10 +154,6 @@ export interface E_2D extends Entity {
     y: number
     h: number
     w: number
-}
-
-export interface AnyEntity extends Entity {
-    key?: any
 }
 
 export interface E_Motion extends E_2D {
