@@ -1,25 +1,28 @@
 // @ts-ignore
-import C from '../lib/crafty/crafty.js'
+import Crafty from '../lib/crafty/crafty.js'
 
 const Freerunner = (function(width?: number, height?: number, element?: HTMLElement|null) : FGame {
     console.log('init Freerunner')
-    C.plugin = []
-    C.loadPlugin = function(plugin: FPlugin) {
-        if (C.plugin[plugin.name]) {
+    Crafty.plugin = []
+    Crafty.loadPlugin = function(plugin: FPlugin) {
+        if (Crafty.plugin[plugin.name]) {
             console.info(`Plugin ${plugin.name} already loaded - ignoring`)
             return
         }
-        C.plugin[plugin.name] = plugin
+        Crafty.plugin[plugin.name] = plugin
         plugin.load(this)
         return plugin
     }
     if (width && height)
-        C.init(width, height, element)
-    C.cc = function(comp: CComponent) {
-        C.c([comp.name], comp)
+        Crafty.init(width, height, element)
+    Crafty.cc = function(comp: CComponent) {
+        Crafty.c([comp.name], comp)
     }
-    return C
+    return Crafty
 })
+
+// @ts-ignore
+if (window) window.Freerunner = Freerunner;
 
 export default Freerunner
 
