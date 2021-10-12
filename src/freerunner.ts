@@ -1,7 +1,7 @@
 // @ts-ignore
 import Crafty from '../lib/crafty/crafty.js'
 
-const Freerunner = (function(width?: number, height?: number, element?: HTMLElement|null) : FGame {
+const Freerunner = (function() : FGame {
     console.log('init Freerunner')
     Crafty.plugin = []
     Crafty.loadPlugin = function(plugin: FPlugin) {
