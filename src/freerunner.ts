@@ -13,10 +13,12 @@ const Freerunner = (function(width?: number, height?: number, element?: HTMLElem
         plugin.load(this)
         return plugin
     }
-    if (width && height)
-        Crafty.init(width, height, element)
-    Crafty.cc = function(comp: CComponent) {
+    Crafty.createEntity = Crafty.e
+    Crafty.createComponent = function(comp: NamedComponent) {
         Crafty.c([comp.name], comp)
+    }
+    Crafty.createSystem = function(system: System) {
+        Crafty.c([system.name], system)
     }
     return Crafty
 })
@@ -38,7 +40,8 @@ export declare interface FGame {
      * Create a component.
      * @param component componenent object data
      */
-    cc<T extends CComponent>(component: CComponent) : T
+    createComponent<T extends NamedComponent>(component: NamedComponent) : T
+    createEntity<T extends Entity>(components: string): T
     e<T extends Entity>(components: string): T
     fps: number
     init(width?:number, height?:number, element?:HTMLElement|string|null): this
@@ -57,7 +60,7 @@ export declare interface FGame {
     pause(toggle?:boolean): this
 
     /**
-     * Registers a system.
+     * Creates a system.
      *
      * _Triggers Events_
      * - `"SystemLoaded", this` - When the system has initialized itself
@@ -74,6 +77,7 @@ export declare interface FGame {
      * @note The `init()` method is for setting up the internal state of the system,
      * if you create entities in it that then reference the system, that'll create an infinite loop.
      */
+    createSystem<T extends NamedSystem>(system: NamedSystem): T
     s<T>(name: string, template?: T): T
     /**
      * Stops the `UpdateFrame` interval and removes the stage element.
@@ -105,12 +109,6 @@ export interface Component {
     [keys:string]: any
 }
 
-export interface System {
-    init?(): void
-    events?: object
-    [keys:string]: any
-}
-
 /**
  * Same as [[Component]] except name-attribute is required.
  * 
@@ -124,9 +122,21 @@ export interface System {
  * F.cc(MyComponent)
  * ```
  */
-export interface CComponent extends Component {
+ export interface NamedComponent extends Component {
     name: string
 }
+
+export interface System {
+    init?(): void
+    events?: object
+    [keys:string]: any
+}
+
+export interface NamedSystem extends System {
+    name: string
+}
+
+
 
 export interface FPlugin {
     name: string
