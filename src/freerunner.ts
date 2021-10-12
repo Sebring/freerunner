@@ -41,7 +41,7 @@ export declare interface FGame {
     cc<T extends CComponent>(component: CComponent) : T
     e<T extends Entity>(components: string): T
     fps: number
-    init(width?:number, height?:number, element?:HTMLElement|null): this
+    init(width?:number, height?:number, element?:HTMLElement|string|null): this
     
     /**
      * Set background color to html color name.
