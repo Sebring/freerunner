@@ -1,6 +1,6 @@
 {
   "name": "freerunner",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Freerunner, a typed event driven entity compent system based game engine.",
   "main": "build/freerunner.js",
   "types": "build/freerunner.d.ts",
