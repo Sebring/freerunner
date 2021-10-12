@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0">
     <channel>
-        <title>Freerunner Blog</title>
+        <title>Freerunner Game Engine Blog</title>
         <link>https://sebring.github.io/freerunner/blog</link>
-        <description>Freerunner Blog</description>
+        <description>Freerunner Game Engine Blog</description>
         <lastBuildDate>Wed, 15 Sep 2021 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
