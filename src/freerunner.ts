@@ -175,3 +175,56 @@ export interface E_Gravity extends E_Motion {
     gravity(): this
     antigravity(): this
 }
+
+/**
+ * Entities with the text-component.
+ * 
+ * By default, text will have the style "10px sans-serif".
+ */
+export interface E_Text extends Entity {
+    /**
+     * Update the text inside the entity.
+     * @param text String of text that will be inserted into the DOM or Canvas element.
+     */
+    text(text: string): this
+    /**
+     * Change the alignment of the text. Valid values are 'start'|'end'|'left'|'center'|'right'.
+     * @param alignment The new alignment of the text.
+     */
+    textAlign(alignment: 'start'|'end'|'left'|'center'|'right'): this
+    /**
+     * Chage the color of the text.
+     * @param color The color in name or string representation of hex, rgb or rgba.
+     */
+    textColor(color: string): this
+    /**
+     * Set font properties of the text entity.
+     * #### Example
+     * ```javascript
+     * F.createEntity('2D, DOM, Text').textFont({ size: '20px', weight: 'bold' })
+     * ```
+     * @param obj Object with key: 'value' pairs.
+     */
+    textFont(obj: object): this
+    /**
+     * This method sets the text so that it cannot be selected (highlighted) by dragging. 
+     * (Canvas text can never be highlighted, so this only matters for DOM text.) Works by changing 
+     * the css property "user-select" and its variants.  
+     * Likewise, this sets the mouseover cursor to be "default" (arrow), not "text" (I-beam)
+     */
+    unselectable(): this
+    /**
+     * Turns on (or off) dynamic text generation for this entity. While dynamic text generation is on, if the .text() 
+     * method is called with a text generating function, the text will be updated each frame.
+     * If textUpdateEvent is provided, text generation will be bound to that event instead of "UpdateFrame".
+     * The text generating function is invoked with the event object parameter, which the event was triggered with.
+     * 
+     * **Note:** Dynamic text generation could cause performance issues when the entity is attached to a Canvas layer.
+     * @param isEnabled 
+     * @param eventName Text generation is triggered by this event, defaults to 'UpdateFrame'. 
+     */
+    dynamicTextGeneration(isEnabled: boolean, eventName: string): this
+}
+export interface EventFunction {
+    (event: any): void
+}
