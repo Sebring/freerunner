@@ -26,6 +26,7 @@
     "build": "yarn compile && yarn minify",
     "minify": "esbuild ./src/freerunner.ts --bundle --minify --keep-names --format=esm --outfile=build/freerunner.min.js",
     "compile": "tsc",
+    "demo": "esbuild ./demo/isometric.ts --bundle --keep-names --format=esm --outfile=demo/demo.min.js --watch",
     "doc": "typedoc --out docs src/freerunner.ts"
   },
   "dependencies": {},
