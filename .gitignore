@@ -2,5 +2,7 @@
 /dist
 /build
 /docs
+/demo/*min*
+/demo/index*
 *.tgz
 TODO.md
