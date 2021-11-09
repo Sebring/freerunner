@@ -3,24 +3,25 @@ import Crafty from '../lib/crafty/crafty.js'
 
 const Freerunner = (function() : FGame {
     console.log('init Freerunner')
-    Crafty.plugin = []
-    Crafty.loadPlugin = function(plugin: FPlugin) {
-        if (Crafty.plugin[plugin.name]) {
+    const F = Crafty
+    F.plugin = []
+    F.loadPlugin = function(plugin: FPlugin, options?: any) {
+        if (F.plugin[plugin.name]) {
             console.info(`Plugin ${plugin.name} already loaded - ignoring`)
             return
         }
-        Crafty.plugin[plugin.name] = plugin
-        plugin.load(this)
+        plugin.load(this, options)
+        F.plugin[plugin.name] = true
         return plugin
     }
-    Crafty.createEntity = Crafty.e
-    Crafty.createComponent = function(comp: NamedComponent) {
-        Crafty.c([comp.name], comp)
+    F.createEntity = F.e
+    F.createComponent = function(comp: NamedComponent) {
+        F.c([comp.name], comp)
     }
-    Crafty.createSystem = function(system: System) {
-        Crafty.c([system.name], system)
+    F.createSystem = function(system: System) {
+        F.c([system.name], system)
     }
-    return Crafty
+    return F
 })
 
 // @ts-ignore
@@ -29,7 +30,7 @@ if (window) window.Freerunner = Freerunner;
 export default Freerunner
 
 export declare interface FGame {
-    (selector: string): Array<Entity>
+    (selector: string): Array<Entity> | Entity
     /**
      * Create a component.
      * @param name name of the new component
@@ -43,6 +44,7 @@ export declare interface FGame {
     createComponent<T extends NamedComponent>(component: NamedComponent) : T
     createEntity<T extends Entity>(components: string): T
     e<T extends Entity>(components: string): T
+    extend(obj: any): this
     fps: number
     init(width?:number, height?:number, element?:HTMLElement|string|null): this
     
@@ -102,7 +104,7 @@ export declare interface FGame {
 }
 
 export interface Component {
-    init?(): void
+    init?(this: Entity): void
     required?: string
     properties?: any
     events?: object
@@ -119,7 +121,7 @@ export interface Component {
  * import MyComponent from '/components/MyComponent'
  * 
  * const F = Freerunner()
- * F.cc(MyComponent)
+ * F.createComponent(MyComponent)
  * ```
  */
  export interface NamedComponent extends Component {
@@ -152,10 +154,10 @@ export interface Viewport {
 }
 
 
-export interface Entity {
+export interface Entity extends Events {
     attr(attributes: any): this
     addComponent(componentName: string): this
-    bind(event: string, fn: any): this
+    requires(componentName: string): this
     [keys:string]: any
 }
 
@@ -174,6 +176,16 @@ export interface E_Motion extends E_2D {
 export interface E_Gravity extends E_Motion {
     gravity(): this
     antigravity(): this
+    acceleration(): {x: number, y:number}
+    /**
+     * Return an object containing the entity's continuous collision detection bounding rectangle.
+     * The CCDBR encompasses the motion delta of the entity's bounding rectangle since last frame.
+     * The CCDBR is minimal if the entity moved on only one axis since last frame, however it encompasses a non-minimal region if it moved on both axis.
+     * For further details, refer to [FAQ#Tunneling](https://github.com/craftyjs/Crafty/wiki/Crafty-FAQ-%28draft%29#why-are-my-bullets-passing-through-other-entities-without-registering-hits).
+     *
+     * @param area 
+     */
+    ccdbr(area: MotionRect): this
 }
 
 /**
@@ -225,6 +237,40 @@ export interface E_Text extends Entity {
      */
     dynamicTextGeneration(isEnabled: boolean, eventName: string): this
 }
+
 export interface EventFunction {
     (event: any): void
+}
+
+export interface Events {
+    /**
+     * Bind function to a named event.
+     * @param name Named event.
+     * @param fn Function to be bound
+     */
+    bind(name: string, fn: Function): void
+    /**
+     * Unbind event, note that reference to bound event is needed, so can't use anonymous functions.
+     * @param name Event
+     * @param fn Reference to function that was bound
+     */
+    unbind(name: string, fn: Function): void
+    /**
+     * Bind to an event only once.
+     * @param name Named event.
+     * @param fn Function to be bound
+     */
+    once(name: string, fn: Function): void
+    /**
+     * Trigger an event and provide data.
+     * @param name Name of event
+     * @param data Pass any data
+     */
+    trigger(name: string, data: any): void
+    /**
+     * Bind function to named event but prevent multiple bounds.
+     * @param name Named event.
+     * @param fn Function to be bound
+     */
+    uniqueBind(name: string, fn: Function): void
 }
