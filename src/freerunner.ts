@@ -108,6 +108,30 @@ export declare interface FGame {
     math: Math
     viewport: Viewport
     loadPlugin(plugin: FPlugin): FPlugin
+    events: CoreEvent
+    map: Map
+}
+
+export interface FPlugin {
+    name: string
+    load(F: FGame, options?: any): void
+}
+
+export interface Math {
+    randomInt(max: number, min: number): number
+}
+
+export interface Map {
+    /**
+     * Return a copy of the minimum bounding rectangle encompassing all entities.
+     */
+    boundaries(): {min: {x:number, y:number}, max:{x:number, y:number}}
+    /*
+     * Do a search for entities in the given region. Returned entities are not guaranteed to overlap with the given region, and the results may contain duplicates.
+     * This method is intended to be used as the first step of a more complex search.
+     * More common use cases should use Crafty.map.search, which filters the results.
+     */
+    unfilteredSearch(rect: Rect, results?: Rect[]): E_2D[]
 }
 
 export interface Component {
@@ -145,13 +169,6 @@ export interface NamedSystem extends System {
     name: string
 }
 
-
-
-export interface FPlugin {
-    name: string
-    load(C: FGame, options?: any): void
-}
-
 export interface Viewport {
     width: number
     height: number
@@ -168,11 +185,24 @@ export interface Entity extends Events {
     [keys:string]: any
 }
 
+export interface Rect {
+    _x: number
+    _y: number
+    _h: number
+    _w: number
+}
+
+export interface MotionRect extends Rect {
+    _dx: number
+    _dy: number
+}
+
 export interface E_2D extends Entity {
     x: number
     y: number
     h: number
     w: number
+    area: number
 }
 
 export interface E_Motion extends E_2D {
@@ -281,3 +311,7 @@ export interface Events {
      */
     uniqueBind(name: string, fn: Function): void
 }
+
+export const GlobalEvents = {UpdateFrame: 'UpdateFrame'}
+
+type CoreEvent = {UpdateFrame: 'UpdateFrame'}
