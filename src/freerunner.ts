@@ -21,6 +21,13 @@ const Freerunner = (function() : FGame {
     F.createSystem = function(system: System) {
         F.c([system.name], system)
     }
+    /**
+    * Get one specific entity by id.
+    * @param entityId the id of the entity
+    */
+    F.get = function(entityId: number): Entity {
+        return F(entityId)
+    }
     return F
 })
 
