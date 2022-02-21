@@ -1,26 +1,37 @@
 // @ts-ignore
 import Crafty from '../lib/crafty/crafty.js'
 
-const Freerunner = (function() : FGame {
+export default (function() : FGame {
     console.log('init Freerunner')
     const F = Crafty
     F.plugin = []
     F.loadPlugin = function(plugin: FPlugin, options?: any) {
+        console.info('Load plugin', {plugin, options})
         if (F.plugin[plugin.name]) {
             console.info(`Plugin ${plugin.name} already loaded - ignoring`)
             return
         }
-        plugin.load(this, options)
+        plugin.load(F, options)
         F.plugin[plugin.name] = true
         return plugin
     }
     F.createEntity = F.e
     F.createComponent = function(comp: NamedComponent) {
+        console.info('Load component', comp)
         F.c([comp.name], comp)
     }
     F.createSystem = function(system: System) {
-        F.c([system.name], system)
+        console.info('Load system', system)
+        F.s(system.name, system)
     }
+    
+    F.load = function<T extends Loadable>(loadable: T, options: object): T {
+        isPlugin(loadable) && F.loadPlugin(loadable, options)
+        isSystem(loadable) && F.createSystem(loadable, options)
+        isComponent(loadable) && F.createComponent(loadable, options)
+        return loadable
+    }
+
     /**
     * Get one specific entity by id.
     * @param entityId the id of the entity
@@ -28,13 +39,22 @@ const Freerunner = (function() : FGame {
     F.get = function(entityId: number): Entity {
         return F(entityId)
     }
+    F.c('obj', {})
     return F
 })
 
-// @ts-ignore
-if (window) window.Freerunner = Freerunner;
+function isPlugin(loadable: Loadable) : loadable is FPlugin {
+    return loadable.type === 'Plugin'
+}
 
-export default Freerunner
+function isComponent(loadable: Loadable): loadable is FComponent {
+    return loadable.type === 'Component'
+}
+
+function isSystem(loadable: Loadable): loadable is FSystem {
+    return loadable.type === 'System'
+}
+
 
 export declare interface FGame {
     (selector: string): Array<Entity> | Entity
@@ -54,7 +74,7 @@ export declare interface FGame {
     extend(obj: any): this
     fps: number
     init(width?:number, height?:number, element?:HTMLElement|string|null): this
-    
+    load<T extends Loadable>(loadable: T, options?: object): T
     /**
      * Set background color to html color name.
      */
@@ -105,41 +125,37 @@ export declare interface FGame {
     trigger(event: string, data: any): void
     rectManager: any
     UID(): any
-    math: Math
     viewport: Viewport
     loadPlugin(plugin: FPlugin): FPlugin
     events: CoreEvent
-    map: Map
 }
 
-export interface FPlugin {
+export interface Loadable {
+    readonly type: string
     name: string
-    load(F: FGame, options?: any): void
+    load?(F?: FGame, options?: object): void
 }
 
-export interface Math {
-    randomInt(max: number, min: number): number
+export interface FPlugin extends Loadable {
+    type: 'Plugin'
+    load(F: FGame, options?: object): void
 }
 
-export interface Map {
-    /**
-     * Return a copy of the minimum bounding rectangle encompassing all entities.
-     */
-    boundaries(): {min: {x:number, y:number}, max:{x:number, y:number}}
-    /*
-     * Do a search for entities in the given region. Returned entities are not guaranteed to overlap with the given region, and the results may contain duplicates.
-     * This method is intended to be used as the first step of a more complex search.
-     * More common use cases should use Crafty.map.search, which filters the results.
-     */
-    unfilteredSearch(rect: Rect, results?: Rect[]): E_2D[]
+export interface FSystem extends Loadable, System {
+    type: 'System'
+}
+
+export interface FComponent extends Loadable, Component {
+    type: 'Component',
+    name: string
 }
 
 export interface Component {
     init?(this: Entity): void
     required?: string
+    remove?(): void
     properties?: any
     events?: object
-    [keys:string]: any
 }
 
 /**
@@ -183,46 +199,6 @@ export interface Entity extends Events {
     addComponent(componentName: string): this
     requires(componentName: string): this
     [keys:string]: any
-}
-
-export interface Rect {
-    _x: number
-    _y: number
-    _h: number
-    _w: number
-}
-
-export interface MotionRect extends Rect {
-    _dx: number
-    _dy: number
-}
-
-export interface E_2D extends Entity {
-    x: number
-    y: number
-    h: number
-    w: number
-    area: number
-}
-
-export interface E_Motion extends E_2D {
-    vx: number
-    vy: number
-}
-
-export interface E_Gravity extends E_Motion {
-    gravity(): this
-    antigravity(): this
-    acceleration(): {x: number, y:number}
-    /**
-     * Return an object containing the entity's continuous collision detection bounding rectangle.
-     * The CCDBR encompasses the motion delta of the entity's bounding rectangle since last frame.
-     * The CCDBR is minimal if the entity moved on only one axis since last frame, however it encompasses a non-minimal region if it moved on both axis.
-     * For further details, refer to [FAQ#Tunneling](https://github.com/craftyjs/Crafty/wiki/Crafty-FAQ-%28draft%29#why-are-my-bullets-passing-through-other-entities-without-registering-hits).
-     *
-     * @param area 
-     */
-    ccdbr(area: MotionRect): this
 }
 
 /**
@@ -303,7 +279,7 @@ export interface Events {
      * @param name Name of event
      * @param data Pass any data
      */
-    trigger(name: string, data: any): void
+    trigger(name: string, data?: any): void
     /**
      * Bind function to named event but prevent multiple bounds.
      * @param name Named event.
