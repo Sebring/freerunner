@@ -11,7 +11,7 @@ export interface Polygon {
  * @param points
  * @returns new `Polygon`
  */
-export default function createPolygon (points: Point[]): Polygon {
+export function createPolygon (points: Point[]): Polygon {
 	return { points: [...points] }
 }
  
@@ -25,7 +25,7 @@ export default function createPolygon (points: Point[]): Polygon {
  * 
  * @deprecated - broken - needs fixing
  */
-export const pointInPolygon = ({points: p}: Polygon, {y, x}: Point): boolean => {
+export function pointInPolygon ({points: p}: Polygon, {y, x}: Point): boolean {
 	const N = p.length/2 // half because [x, y] tuples and not actual points
 	let odd = false
 /*
@@ -47,8 +47,9 @@ FIXME: broken - update to use points
  * @param shift shift vector
  * @returns new polygon
  */
-export const shiftPolygon = (polygon: Polygon, shift: Point): Polygon =>
-	({points: polygon.points.map(p => shiftPoint(p, shift))})
+export function shiftPolygon (polygon: Polygon, shift: Point): Polygon {
+	return {points: polygon.points.map(p => shiftPoint(p, shift))}
+}
 
 /**
  * Clone a polygon.
@@ -64,25 +65,26 @@ export function clonePolygon ({points}: Polygon): Polygon  {
  * @param rect Original rect
  * @returns new polygon
  */
-export const createPolygonfromRect = ({ _x: x, _y: y, _w: w, _h: h }: Rect): Polygon =>
-	createPolygon([createPoint(x, y), createPoint(x + w, y), createPoint(x + w, y + h), createPoint(x, y + h)])
-
+export function createPolygonfromRect ({ _x: x, _y: y, _w: w, _h: h }: Rect): Polygon {
+	return createPolygon([createPoint(x, y), createPoint(x + w, y), createPoint(x + w, y + h), createPoint(x, y + h)])
+}
 /**
  * Check if obj is a `Polygon`.
  * @param obj 
  * @returns true if property points: number[]
  */
-export const isPolygon = (obj: any): boolean =>
-	(!!obj && !!obj.points && typeof obj.points.length === 'number')
+export function isPolygon (obj: any): boolean {
+	return (!!obj && !!obj.points && typeof obj.points.length === 'number')
+}
 
 /**
  * Translate polygon to a `Rect` 
  * @param polygon  
  * @deprecated - broken
  */
-export const polygonToRect = ({points: p}: Polygon): Rect =>
-	({_x: 0, _y:0, _w:0, _h:0})
-//({ _x: p[0].x, _y: p[0].y, _w: p[1].x-p[0].x, _h: p[1].y-p[0].y })
+export function polygonToRect ({points: p}: Polygon): Rect {
+	return {_x: 0, _y:0, _w:0, _h:0}
+}
 
 /**
  * Get rotated polygon
@@ -91,20 +93,18 @@ export const polygonToRect = ({points: p}: Polygon): Rect =>
  * @param origin world based origin
  * @returns A rotated polygon
  */
-export const rotatePolygon = (polygon: Polygon, rotation: number, origin: Point): Polygon => 
-	createPolygon(polygon.points.map(p => rotatePoint(p, origin, rotation)))
-
+export function rotatePolygon (polygon: Polygon, rotation: number, origin: Point): Polygon { 
+	return createPolygon(polygon.points.map(p => rotatePoint(p, origin, rotation)))
+}
 /**
  * Checks if polygon is unrotated rectangle.
  * @param polygon 
  * @returns true if polygon is un-rotated rectangle.
- */
+ *
+ * 	0: X-Y  	1: XW-Y
+ *	3: X-YH 	2: XW-YH
+*/
 export function isPolygonRect({points: p}: Polygon): boolean {
-	// check for matching vertex coords
-	/*
-		0: X-Y  	1: XW-Y
-		3: X-YH 	2: XW-YH
-	*/
 	return p.length === 4 && p[0].x === p[3].x && p[0].y === p[1].y && p[2].y === p[3].y && p[1].x === p[2].x
 }
 

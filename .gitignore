@@ -4,5 +4,8 @@
 /docs
 /demo/*min*
 /demo/index*
+/demos/
 *.tgz
 TODO.md
+test-results/
+playwright-report/

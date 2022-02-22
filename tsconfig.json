@@ -6,7 +6,10 @@
       "typeRoots": ["./types"],
       "outDir": "./build",
       "declaration": true,
-      "strict": true
+      "strict": true,
+      "strictNullChecks": false,
+      "moduleResolution": "node",
+      "module": "commonjs"
   },
   "exclude": ["node_modules", "/types", "/dist", "/build"]
 }
