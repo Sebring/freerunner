@@ -57,7 +57,7 @@ function isSystem(loadable: Loadable): loadable is FSystem {
 
 
 export declare interface FGame {
-    (selector: string): Array<Entity> | Entity
+    (selector: string|number): Array<Entity> | Entity
     /**
      * Create a component.
      * @param name name of the new component
@@ -70,6 +70,8 @@ export declare interface FGame {
      */
     createComponent<T extends NamedComponent>(component: NamedComponent) : T
     createEntity<T extends Entity>(components: string): T
+    defineScene(name: string, scene: Function): void
+    enterScene(name: string): void
     e<T extends Entity>(components: string): T
     extend(obj: any): this
     fps: number
@@ -142,7 +144,8 @@ export interface FPlugin extends Loadable {
 }
 
 export interface FSystem extends Loadable, System {
-    type: 'System'
+    type: 'System',
+    name: string
 }
 
 export interface FComponent extends Loadable, Component {
@@ -195,6 +198,7 @@ export interface Viewport {
 
 
 export interface Entity extends Events {
+    getId(): number
     attr(attributes: any): this
     addComponent(componentName: string): this
     requires(componentName: string): this
