@@ -1,6 +1,7 @@
-import { FGame, FSystem } from "../../../freerunner"
-import { E_2D, isE_2D } from "../2d"
-import { getRect, Rect } from "../lib/Rect"
+import { FGame, FSystem } from "../../../freerunner.js"
+import { E_2D, isE_2D } from "../2d.js"
+import { E_Collision } from "../c/Collision.js"
+import { AABB } from "../lib/Aabb.js"
 
 type Coords = {
 	maxX: number
@@ -25,7 +26,7 @@ type Keys = {
 
 export interface Entry {
 	keys: Keys
-	obj: E_2D
+	id: number
 }
 
 const emptyKeys = { x1: 0, x2: 0, y1: 0, y2: 0 } as Keys
@@ -37,17 +38,19 @@ export interface HashMap extends FSystem {
 	_coordBoundsDirty: boolean
 	_boundsHash: Coords
 	_boundsCoords: Coords
-	map: any
+	map: Array<Array<Array<number>>>
 	boundaries() : void 
-	insert(obj: E_2D, entry?: Entry): Entry
-	key (obj: Rect) : Keys
-	refresh(entry: Entry) : void
+	insert(entity: E_Collision, entry?: Entry): Entry
+	key (obj: AABB) : Keys
+	refresh(entry: Entry, aabb: AABB) : void
 	remove(entry: Entry) : void
-	unfilteredSearch(rect: Rect, results?: E_2D[]) : E_2D[]
-	updateEntry(entry: Entry, rect :Rect) : void
-	_hashXY(x: number, y: number): number
+	unfilteredSearch(aabb: AABB, results?: number[]) : number[]
+	updateEntry(entry: Entry, aabb :AABB) : void
+	_hashXY(x: number, y: number): string
 	_isEntity(obj: any): obj is E_2D
 	_updateBoundaries(): void
+	_removeEntry(entry: Entry): void
+	_insert(id: number, aabb: AABB): Entry
 }
 
 const getKeyHash = (keys: Keys) : string => {
@@ -62,8 +65,10 @@ const HashMapSystem: HashMap = {
 	_coordBoundsDirty: false,
 	_boundsHash: CoordsDef(),
 	_boundsCoords: CoordsDef(),
-	map: {},
-	load(F, {size} = {size:64}) {
+
+	map: [],
+
+	load(F, {size} = {size: 64}) {
 		console.log('Load', this.name)
 		this._cellSize = size
 	},
@@ -93,25 +98,29 @@ const HashMapSystem: HashMap = {
 	},
 
 	/**
-	 * Insert obj into map, possibly be reusing an entry.
+	 * Insert entiety into map
 	*/
-	insert (obj: E_2D, entry?: Entry): Entry {
+	insert (entity): Entry {
+		return this._insert(entity.getId(), entity.aabb)
+	},
 
-		// create entry
-		let keys = this.key(obj)
-		
+	_insert (id, aabb): Entry {
+		const keys = this.key(aabb)
+
 		// insert into map
 		for (let x = keys.x1; x <= keys.x2; x++) {
 			for (let y = keys.y1; y <= keys.y2; y++) {
-				let hash = this._hashXY(x, y)
-				if (!this.map[hash])
-					this.map[hash] = []
-				this.map[hash].push(obj)
+				// let hash = this._hashXY(x, y)
+				if (!this.map[x])
+					this.map[x] = []
+				if (!this.map[x][y])
+					this.map[x][y] = []
+				this.map[x][y].push(id)
 			}
 		}
 
 		this._boundsDirty = true
-		return {keys, obj}
+		return {keys, id}
 	},
 
 	/**
@@ -122,95 +131,81 @@ const HashMapSystem: HashMap = {
 		* 
 		// FIXME:  so very unpure - update existing keys or return new
 	 */
-	key (e: E_2D): Keys{
-		//debugger
-		let rect = e._cbr || e._mbr || getRect(e)
+	key (aabb: AABB): Keys{
 		let keys = {x1: 0, x2:0, y1:0, y2: 0} as Keys
-		keys.x1 = Math.floor(rect._x / this._cellSize)
-		keys.y1 = Math.floor(rect._y / this._cellSize)
-		keys.x2 = Math.floor((rect._w + rect._x) / this._cellSize)
-		keys.y2 = Math.floor((rect._h + rect._y) / this._cellSize)
-		console.log('keys', keys, e)
+		keys.x1 = Math.floor(aabb.min.x / this._cellSize)
+		keys.y1 = Math.floor(aabb.min.y / this._cellSize)
+		keys.x2 = Math.floor(aabb.max.x / this._cellSize)
+		keys.y2 = Math.floor(aabb.max.y / this._cellSize)
 		return keys
 	},
 
 	/**
 	 * Update an entry's keys, and its position in the broad phrase map.
+	 * 
 	 */
-	refresh ({keys, obj} : Entry) {
-		
-		// remove obj from map
-		for (let x = keys.x1; x <= keys.x2; x++) {
-			for (let y = keys.y1; y <= keys.y2; y++) {
-				let hash = this._hashXY(x, y)
-				let cell = this.map[hash]
-				if (cell) {
-					let n = cell.length;
-					//loop over objs in cell and delete
-					for (let m = 0; m < n; m++)
-							if (cell[m] && cell[m][0] === obj[0]) {
-									cell.splice(m, 1);
-							}
-				}
-					
+	refresh (entry, aabb) {
+		// FIXME: performance - don't update all
+		// 1) remove entity where keys not match with entry.keys
+		// 2) add entity where new keys 
+
+		// delete all
+		this._removeEntry(entry)
+
+		// insert as new
+		return this._insert(entry.id, aabb)
+	},
+
+	_removeEntry(entry) {
+		// remove entity from map
+		for (let x = entry.keys.x1; x <= entry.keys.x2; x++) {
+			for (let y = entry.keys.y1; y <= entry.keys.y2; y++) {
+				let cell = this.map[x][y] as number[]
+				const i = cell.findIndex(v => v===entry.id)
+				cell.splice(i, 1)
 			}
 		}
-
-		// call function instead of code as in crafty source
-		return this.insert(obj)
 	},
 
 	/**
 	 * Remove an entry from the broad phase map.
 	*/
-	remove(entry: Entry) {
+	remove (entry: Entry) {
+		// debugger
 		let keys = entry.keys
-		let obj = entry.obj
+		let id = entry.id
 		
-		// search in all buckets
-		for (let x = keys.x1; x <= keys.x2; x++) {
-			for (let y = keys.y1; y <= keys.y2; y++) {
-				let hash = this._hashXY(x, y)
-				if (this.map[hash]) {
-					let cell = this.map[hash]
-					// loop over items and delete
-					for (let m = 0, L = cell.length; m < L; m++) {
-						if (cell[m] && cell[m][0] === obj[0])
-            	cell.splice(m, 1)
-					}
-				}
-			}
-		}
+		this._removeEntry(entry)
 
 		this._boundsDirty = true;
 	},
 
 	/**
-	 * Do a search for entities in the given region.  Returned entities are **not** guaranteed
-	 * to overlap with the given region, and the results may contain duplicates.
+	 * Do a search for entities in the given region.
+	 * Returned entities are **not** guaranteed to overlap.
+	 * Results may contain duplicates. 
 	 * 
 	 * This method is intended to be used as the first step of a more complex search.
 	 * More common use cases should use Crafty.map.search, which filters the results.
-	 * @param rect Region to search for entities.
+	 * @param aabb Region to search for entities.
 	 * @param results If passed, entities found will be appended to this array.
 	*/
-	unfilteredSearch(rect: Rect, results?: E_2D[]) {
-		var keys = this.key(rect),
-				i, j, k,  cell;
-		results = results || [];
+	unfilteredSearch(aabb: AABB, results) {
 
-		//search in all x buckets
-		for (i = keys.x1; i <= keys.x2; i++) {
-				//insert into all y buckets
-				for (j = keys.y1; j <= keys.y2; j++) {
-						if ((cell = this.map[(i << 16) ^ j])) {
-								for (k = 0; k < cell.length; k++) {
-										results.push(cell[k])
-								}
-						}
-				}
+		results = results || [];
+		const idSet = new Set<number>()
+
+		const keys = this.key(aabb)
+
+		for (let x = keys.x1; x <= keys.x2; x++) {
+			for (let y = keys.y1; y<= keys.y2; y++) {
+				results = [...results, ...this.map[x][y]]
+				this.map[x][y].forEach( (id: number) => {
+					idSet.add(id)
+				})
+			}
 		}
-		return results
+		return Array.from(idSet)
 	},
 
 	/**
@@ -219,16 +214,17 @@ const HashMapSystem: HashMap = {
 	 * 
 	 * This was Entry.update in Crafty
 	 */
-	updateEntry(entry: Entry, rect :Rect) {
-		if (getKeyHash(this.key(rect)) !== getKeyHash(entry.keys))
-			 return this.refresh(entry)
+	updateEntry(entry, aabb) {
+		if (!keysMatch(this.key(aabb), entry.keys))
+			return this.refresh(entry, aabb)
 		
 		this._coordBoundsDirty = true
 		return entry		
 	},
 
-	_hashXY(x: number, y: number): number {
-		return (x << 16) ^ y
+	_hashXY(x: number, y: number): string {
+		//return (x << 16) ^ y
+		return (`${x}_${y}`)
 	},
 
 	_isEntity(obj: any): obj is E_2D {
@@ -292,6 +288,10 @@ const HashMapSystem: HashMap = {
 			this._boundsDirty = this._coordBoundsDirty = false
 		}
 	}
+}
+
+function keysMatch(a: Keys, b: Keys): boolean {
+	return (a.x1 === b.x1 && a.x2 === b.x2 && a.y1 === b.y1 && a.y2 === b.y2)
 }
 
 export default HashMapSystem

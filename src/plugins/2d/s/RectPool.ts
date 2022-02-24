@@ -1,5 +1,5 @@
-import { FSystem } from "../../../freerunner";
-import { emptyRect, Rect } from "../lib/Rect";
+import { FSystem } from "../../../freerunner.js";
+import { emptyRect, Rect } from "../lib/Rect.js";
 
 export interface RectSystem extends FSystem {
 	pool: Pool

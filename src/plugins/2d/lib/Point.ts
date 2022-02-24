@@ -1,4 +1,4 @@
-import { cosinusRadians, sinusRadians } from "./Math2d"
+import { cosinusRadians, sinusRadians } from "./Math2d.js"
 
 export interface Point {
   x: number
