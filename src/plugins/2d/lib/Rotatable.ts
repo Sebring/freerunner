@@ -1,4 +1,3 @@
-import { Point } from "./Point";
 
 export interface Rotatable<R> {
   base: R
