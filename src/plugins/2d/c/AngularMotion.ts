@@ -1,5 +1,5 @@
-import { FComponent } from "../../../freerunner.js";
-import { E_2D } from "../2d.js";
+import { Component, FComponent } from "../../../freerunner.js";
+import { E_2D } from "./GameObject.js";
 
 export interface E_AngularMotion extends E_2D, C_AngularMotion {
   arotation: number
@@ -18,13 +18,19 @@ interface C_AngularMotion {
   _angularMotionTick(this: E_AngularMotion, frameDelta: any): void
 }
 
-interface AngularMotionComponent extends C_AngularMotion, FComponent {
+interface AngularMotionComponent extends C_AngularMotion, Component {
   _prop(this: E_AngularMotion, prop: 'arotation'|'vrotation', value: number): void
 }
 
-const AngularMotion: AngularMotionComponent = {
-  name: 'AngularMotion',
+const AngularMotion: FComponent = {
   type: 'Component',
+  load(F, options) {
+    return Component
+  }
+}
+
+const Component: AngularMotionComponent = {
+  name: 'AngularMotion',
 
   required: '2D',
 

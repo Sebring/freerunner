@@ -1,6 +1,7 @@
-import { FComponent } from "../../../freerunner.js";
-import { eqPoint, E_2D, Point } from "../2d.js";
+import { Component, FComponent } from "../../../freerunner.js";
+import { eqPoint, Point } from "../2d.js";
 import { emptyRect, Rect } from "../lib/Rect.js";
+import { E_2D } from "./GameObject.js";
 
 export interface E_Motion extends E_2D, C_Motion {
   ax: number
@@ -36,127 +37,131 @@ interface C_Motion {
   _linearMotionTick(frameDelta: any): void
 }
 
-interface MotionComponent extends C_Motion, FComponent {
+interface MotionComponent extends C_Motion, Component {
   _motionProp(prop: string, v: number): void
 }
 
-const Motion : MotionComponent = {
-  name: 'Motion',
+
+const Motion: FComponent = {
   type: 'Component',
-
-  required: '2D',
-
-  _ax: 0,
-  _ay: 0,
-  _dx: 0,
-  _dy: 0,
-  _vx: 0,
-  _vy: 0,
-  _acceleration: {x:0, y:0},
-  _motionDelta: {x:0, y:0},
-  __oldDirection: {x:0, y:0} as DirectionPoint,
-
-  init(this: E_Motion) {
-    // fix properties
-    this.bind('UpdateFrame', this._linearMotionTick)
-  },
-
-  remove(this: E_Motion) {
-    this.unbind('UpdateFrame', this._linearMotionTick)
-  },
-
-  properties: {
-    vx: {
-      set(this: MotionComponent, v: number) {
-        this._motionProp('vx', v)
+  load(F, options) {
+    const component : MotionComponent = {
+      name: 'Motion',
+      required: '2D',
+      _ax: 0,
+      _ay: 0,
+      _dx: 0,
+      _dy: 0,
+      _vx: 0,
+      _vy: 0,
+      _acceleration: {x:0, y:0},
+      _motionDelta: {x:0, y:0},
+      __oldDirection: {x:0, y:0} as DirectionPoint,
+    
+      init(this: E_Motion) {
+        // fix properties
+        this.bind('UpdateFrame', this._linearMotionTick)
       },
-      get(this: MotionComponent) {
-        return this._vx
-      }
-    },
-    vy: {
-      set(this: MotionComponent, v: number) {
-        this._motionProp('vy', v)
+    
+      remove(this: E_Motion) {
+        this.unbind('UpdateFrame', this._linearMotionTick)
       },
-      get(this: MotionComponent) {
-        return this._vy
-      }
+    
+      properties: {
+        vx: {
+          set(this: MotionComponent, v: number) {
+            this._motionProp('vx', v)
+          },
+          get(this: MotionComponent) {
+            return this._vx
+          }
+        },
+        vy: {
+          set(this: MotionComponent, v: number) {
+            this._motionProp('vy', v)
+          },
+          get(this: MotionComponent) {
+            return this._vy
+          }
+        }
+      },
+    
+      _motionProp(this: E_Motion, prop: string, v: number) {
+        this[`_${prop}`] = v
+      },
+    
+      /**
+       * Linear x, y acceleration
+       */
+      acceleration(this: E_Motion): Point {
+        return this._acceleration
+      },
+    
+      /**
+       * CCDBR is the continous collision detectection bounding rectangle, 
+       * hence mbr + velocity
+       * FIXME - unpure, side effects on argument ccdbr
+       */
+      ccdbr(this: E_Motion, ccdbr: Rect): Rect {
+        console.error('Motion.ccdbr: Not implemented')
+        return emptyRect
+      },
+    
+      /**
+       * Difference between position from last frame.
+       */
+      motionDelta(this: E_Motion): Point {
+        return this._motionDelta
+      },
+    
+      /**
+       * Reset all linear motion (velocity, acceleration, motionDelta).
+       * @returns this
+       */
+      resetMotion(this: E_Motion): E_Motion {
+        this.vx = this.vy = this.ax = this.ay = this._dx = this._dy = 0
+        return this
+      },
+    
+      /**
+       * Get the velocity vector.
+       */
+      velocity(this: E_Motion): Point {
+        return this._velocity
+      },
+    
+      // update according to velocity
+      // bound to trigger on `UpdateFrame`
+      // FIXME: delta type
+      _linearMotionTick(this: E_Motion, delta: any) {
+        let dt = delta.dt / 1000
+        let vx = this._vx
+        let vy = this._vy
+        let ax = this._ax
+        let ay = this._ay
+    
+        // update delta movement
+        this._dx = getDeltaPosition(vx, ax, dt)
+        this._dy = getDeltaPosition(vy, ay, dt)
+    
+        // update velocity = a * Δt
+        this.vx = getNewVelocity(vx, ax, dt)
+        this.vy = getNewVelocity(vy, ay, dt)
+    
+        // check for new direction
+        const currDirection = getDirectionPoint(this._vx, this._vy)
+        if (!eqPoint(currDirection, this.__oldDirection)) {
+          this.__oldDirection = {...currDirection}
+          this.trigger('NewDirection', currDirection)
+        }
+    
+        // update position
+        this._setPosition(this._x + this._dx, this._y + this._dy)
+      },
+    
     }
-  },
-
-  _motionProp(this: E_Motion, prop: string, v: number) {
-    this[`_${prop}`] = v
-  },
-
-  /**
-   * Linear x, y acceleration
-   */
-  acceleration(this: E_Motion): Point {
-    return this._acceleration
-  },
-
-  /**
-   * CCDBR is the continous collision detectection bounding rectangle, 
-   * hence mbr + velocity
-   * FIXME - unpure, side effects on argument ccdbr
-   */
-  ccdbr(this: E_Motion, ccdbr: Rect): Rect {
-    console.error('Motion.ccdbr: Not implemented')
-    return emptyRect
-  },
-
-  /**
-   * Difference between position from last frame.
-   */
-  motionDelta(this: E_Motion): Point {
-    return this._motionDelta
-  },
-
-  /**
-   * Reset all linear motion (velocity, acceleration, motionDelta).
-   * @returns this
-   */
-  resetMotion(this: E_Motion): E_Motion {
-    this.vx = this.vy = this.ax = this.ay = this._dx = this._dy = 0
-    return this
-  },
-
-  /**
-   * Get the velocity vector.
-   */
-  velocity(this: E_Motion): Point {
-    return this._velocity
-  },
-
-  // update according to velocity
-  // bound to trigger on `UpdateFrame`
-  // FIXME: delta type
-  _linearMotionTick(this: E_Motion, delta: any) {
-    let dt = delta.dt / 1000
-    let vx = this._vx
-    let vy = this._vy
-    let ax = this._ax
-    let ay = this._ay
-
-    // update delta movement
-    this._dx = getDeltaPosition(vx, ax, dt)
-    this._dy = getDeltaPosition(vy, ay, dt)
-
-    // update velocity = a * Δt
-    this.vx = getNewVelocity(vx, ax, dt)
-    this.vy = getNewVelocity(vy, ay, dt)
-
-    // check for new direction
-    const currDirection = getDirectionPoint(this._vx, this._vy)
-    if (!eqPoint(currDirection, this.__oldDirection)) {
-      this.__oldDirection = {...currDirection}
-      this.trigger('NewDirection', currDirection)
-    }
-
-    // update position
-    this._setPosition(this._x + this._dx, this._y + this._dy)
-  },
-
+    return component
+  }
 }
 
 /**

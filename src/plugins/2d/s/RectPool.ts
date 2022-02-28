@@ -1,7 +1,7 @@
-import { FSystem } from "../../../freerunner.js";
+import { FSystem, System } from "../../../freerunner.js";
 import { emptyRect, Rect } from "../lib/Rect.js";
 
-export interface RectSystem extends FSystem {
+export interface RectSystem extends System {
 	pool: Pool
 }
 
@@ -17,56 +17,60 @@ interface Pool {
 
 // FIXME - any uses of POOL.get ? otherwise this is functionality as unused
 
-const RectPool: RectSystem = {
+const RectPool: FSystem = {
 	type: 'System',
-	name: 'RectPool',
 	load() {
-		console.log('Load', this.name)
-	},
-	init() {
-		console.log('Init', this.name)
-	},
 
-	// This is a private object used internally by 2D methods
-	// Cascade and _attr need to keep track of an entity's old position,
-	// but we want to avoid creating temp objects every time an attribute is set.
-	// The solution is to have a pool of objects that can be reused.
-	//
-	// The current implementation makes a BIG ASSUMPTION:  that if multiple rectangles are requested,
-	// the later one is recycled before any preceding ones.  This matches how they are used in the code.
-	// Each rect is created by a triggered event, and will be recycled by the time the event is complete.
-	pool: (function () : Pool {
-		let pool = [] as Rect[]
-		let pointer = 0
-		return {
-			get (x: number, y: number, w: number, h: number) {
-				if (pool.length <= pointer)
-					pool.push(emptyRect)
-				let r = pool[pointer++]
-				r._x = x
-				r._y = y
-				r._w = w
-				r._h = h
-				return r
+		const system: RectSystem = {
+			name: 'RectPool',
+
+			init() {
+				console.log('Init', this.name)
 			},
 
-			copy (orig: Rect) {
-				if (pool.length <= pointer)
-					pool.push(emptyRect)
-				let copy = pool[pointer++]
-				copy._x = orig._x
-				copy._y = orig._y
-				copy._w = orig._w
-				copy._h = orig._h
-				return copy
-			},
+			// This is a private object used internally by 2D methods
+			// Cascade and _attr need to keep track of an entity's old position,
+			// but we want to avoid creating temp objects every time an attribute is set.
+			// The solution is to have a pool of objects that can be reused.
+			//
+			// The current implementation makes a BIG ASSUMPTION:  that if multiple rectangles are requested,
+			// the later one is recycled before any preceding ones.  This matches how they are used in the code.
+			// Each rect is created by a triggered event, and will be recycled by the time the event is complete.
+			pool: (function () : Pool {
+				let pool = [] as Rect[]
+				let pointer = 0
+				return {
+					get (x: number, y: number, w: number, h: number) {
+						if (pool.length <= pointer)
+							pool.push(emptyRect)
+						let r = pool[pointer++]
+						r._x = x
+						r._y = y
+						r._w = w
+						r._h = h
+						return r
+					},
 
-			// arguments make code using this more readably
-			recycle (old: Rect) {
-				pointer--
-			}
+					copy (orig: Rect) {
+						if (pool.length <= pointer)
+							pool.push(emptyRect)
+						let copy = pool[pointer++]
+						copy._x = orig._x
+						copy._y = orig._y
+						copy._w = orig._w
+						copy._h = orig._h
+						return copy
+					},
+
+					// arguments make code using this more readably
+					recycle (old: Rect) {
+						pointer--
+					}
+				}
+			})()
 		}
-	})()
+		return system
+	}
 }
 
 export default RectPool

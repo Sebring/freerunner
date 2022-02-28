@@ -16,7 +16,7 @@ export default (function() : FGame {
         return plugin
     }
     F.createEntity = F.e
-    F.createComponent = function(comp: NamedComponent) {
+    F.createComponent = function(comp: Component) {
         console.info('Load component', comp)
         F.c([comp.name], comp)
     }
@@ -27,9 +27,17 @@ export default (function() : FGame {
     
     F.load = function<T extends Loadable>(loadable: T, options: object): T {
         isPlugin(loadable) && F.loadPlugin(loadable, options)
-        isSystem(loadable) && F.createSystem(loadable, options)
-        isComponent(loadable) && F.createComponent(loadable, options)
+        isSystem(loadable) && F.loadSystem(loadable, options)
+        isComponent(loadable) && F.loadComponent(loadable, options)
         return loadable
+    }
+
+    F.loadComponent = function(comp: FComponent, options?: object) {
+        F.createComponent(comp.load(F, options))
+    }
+
+    F.loadSystem = function(system: FSystem, options?: Record<string, any>) {
+        F.createSystem(system.load(F, options))
     }
 
     /**
@@ -68,7 +76,7 @@ export declare interface FGame {
      * Create a component.
      * @param component componenent object data
      */
-    createComponent<T extends NamedComponent>(component: NamedComponent) : T
+    createComponent<T extends Component>(component: Component) : T
     createEntity<T extends Entity>(components: string): T
     defineScene(name: string, scene: Function): void
     enterScene(name: string): void
@@ -108,7 +116,7 @@ export declare interface FGame {
      * @note The `init()` method is for setting up the internal state of the system,
      * if you create entities in it that then reference the system, that'll create an infinite loop.
      */
-    createSystem<T extends NamedSystem>(system: NamedSystem): T
+    createSystem<T extends System>(system: System): T
     s<T>(name: string, template?: T): T
     /**
      * Stops the `UpdateFrame` interval and removes the stage element.
@@ -134,26 +142,27 @@ export declare interface FGame {
 
 export interface Loadable {
     readonly type: string
-    name: string
-    load?(F?: FGame, options?: object): void
+    load?(F: FGame, options?: object): void
 }
 
 export interface FPlugin extends Loadable {
+    name: string
     type: 'Plugin'
     load(F: FGame, options?: object): void
 }
 
-export interface FSystem extends Loadable, System {
+export interface FSystem extends Loadable {
     type: 'System',
-    name: string
+    load(F: FGame, options?: Record<string, any>): System
 }
 
-export interface FComponent extends Loadable, Component {
+export interface FComponent extends Loadable {
     type: 'Component',
-    name: string
+    load(F: FGame, options?: object): Component
 }
 
 export interface Component {
+    name: string
     init?(this: Entity): void
     required?: string
     remove?(): void
@@ -161,31 +170,10 @@ export interface Component {
     events?: object
 }
 
-/**
- * Same as [[Component]] except name-attribute is required.
- * 
- * This gives the possibility to export component objects and create them without the need of
- * providing name as separate parameter.
- * 
- * ```typescript
- * import MyComponent from '/components/MyComponent'
- * 
- * const F = Freerunner()
- * F.createComponent(MyComponent)
- * ```
- */
- export interface NamedComponent extends Component {
-    name: string
-}
-
 export interface System {
+    name: string
     init?(): void
     events?: object
-    [keys:string]: any
-}
-
-export interface NamedSystem extends System {
-    name: string
 }
 
 export interface Viewport {
