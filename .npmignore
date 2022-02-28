@@ -1,4 +1,21 @@
+.github/
 /node_modules
 /docs
+
+# demos
+/demo
+/demos
+
+# tests
+playwright.config.mjs
+test.cjs
+/__tests
+
+# configs
+# tsconfig.json
+
+# other packs
 *.tgz
+
+# private files
 TODO.md

@@ -1,6 +1,6 @@
 {
   "name": "freerunner",
-  "version": "0.0.7",
+  "version": "0.3.0",
   "description": "Freerunner, a typed event driven entity compent system based game engine.",
   "main": "build/freerunner.js",
   "types": "build/freerunner.d.ts",
@@ -26,13 +26,18 @@
     "build": "run-s build:compile build:minify",
     "build:minify": "esbuild ./src/freerunner.ts --bundle --minify --keep-names --format=esm --outfile=build/freerunner.js",
     "build:compile": "tsc",
-    "testw": "node ./test.cjs"
+    "testw": "node ./test.cjs",
+    "demo": "esbuild ./demo/demo.ts --bundle --keep-names --format=esm --outfile=demo/demo.min.js --watch",
+    "doc": "typedoc --out docs src/freerunner.ts",
+    "test": "yarn playwright test",
+    "dev": "run-s build",
+    "dev:watch": "chokidar src -c \"yarn dev\""
   },
   "dependencies": {},
   "devDependencies": {
     "@playwright/test": "^1.18.1",
     "chokidar-cli": "^3.0.0",
-    "esbuild": "^0.13.3",
+    "esbuild": "^0.14.23",
     "npm-run-all": "^4.1.5",
     "typescript": "^4.4.2"
   }
